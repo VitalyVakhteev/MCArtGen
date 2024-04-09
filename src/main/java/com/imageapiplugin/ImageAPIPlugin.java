@@ -10,15 +10,20 @@ public class ImageAPIPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        startServer(8000); // start
-        getLogger().info("ImageAPIPlugin has been enabled and HTTP server started on port 8000.");
+        int port = 8001;
+        startServer(port); // start
+        if (server != null) {
+            getLogger().info("ImageAPIPlugin has been enabled and HTTP server started on port " + port + ".");
+        } else {
+            getLogger().severe("Failed to start HTTP server.");
+        }
     }
 
     @Override
     public void onDisable() {
         if (server != null) {
             server.stop(0); // stop
-            getLogger().info("ImageAPIPlugin and its HTTP server have been disabled.");
+            getLogger().info("com.imageapiplugin.ImageAPIPlugin and its HTTP server have been disabled.");
         }
     }
 

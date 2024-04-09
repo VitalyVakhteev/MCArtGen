@@ -1,5 +1,6 @@
-name: ImageAPIPlugin
+name: com.imageapiplugin.ImageAPIPlugin
 version: 1.0
+api-version: "1.13"
 main: com.imageapiplugin.ImageAPIPlugin
 description: A plugin to accept image URLs and coordinates via HTTP POST.
 commands:
