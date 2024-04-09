@@ -1,0 +1,9 @@
+name: ImageAPIPlugin
+version: 1.0
+main: com.imageapiplugin.ImageAPIPlugin
+description: A plugin to accept image URLs and coordinates via HTTP POST.
+commands:
+  startapi:
+    description: Start the image API server
+  stopapi:
+    description: Stop the image API server
