@@ -8,12 +8,33 @@ import java.net.URL;
 public class JImage {
     private BufferedImage image;
     private int[] averageColor;
+    private String filename;
+
+    public JImage(URL imageUrl, String filename) throws IOException {
+        this.filename = filename;
+        this.image = ImageIO.read(imageUrl);
+        if (this.image == null) {
+            throw new IOException("Failed to load image from URL: " + imageUrl);
+        }
+        this.averageColor = calculateAverageColor();
+    }
 
     public JImage(URL imageUrl) throws IOException {
         this.image = ImageIO.read(imageUrl);
         if (this.image == null) {
             throw new IOException("Failed to load image from URL: " + imageUrl);
         }
+        this.averageColor = calculateAverageColor();
+    }
+
+    public JImage(BufferedImage image, String filename) {
+        this.image = image;
+        this.averageColor = calculateAverageColor();
+        this.filename = filename;
+    }
+
+    public JImage(BufferedImage image) {
+        this.image = image;
         this.averageColor = calculateAverageColor();
     }
 
@@ -57,5 +78,9 @@ public class JImage {
                 Math.pow(color2[1] - color1[1], 2) +
                 Math.pow(color2[2] - color1[2], 2) +
                 Math.pow(color2[3] - color1[3], 2));
+    }
+
+    public String getFileName() {
+        return filename;
     }
 }
