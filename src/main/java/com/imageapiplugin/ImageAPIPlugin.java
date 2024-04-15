@@ -30,7 +30,7 @@ public class ImageAPIPlugin extends JavaPlugin {
     private void startServer(int port) {
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);
-            server.createContext("/upload", new ImageHandler());
+            server.createContext("/upload", new ImageHandler(this));
             server.setExecutor(null); // default executor
             server.start();
         } catch (IOException e) {

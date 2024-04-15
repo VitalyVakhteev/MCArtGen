@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -19,12 +20,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class ImageHandler implements HttpHandler {
-    private final Gson gson = new Gson();
     private MosaicCreator mosaicCreator;
+    private JavaPlugin plugin;
+    private final MaterialMapper materialMapper = new MaterialMapper();
+    private final Gson gson = new Gson();
     private final int maxHeight = 96;
-    private MaterialMapper materialMapper = new MaterialMapper();
 
-    public ImageHandler() {
+    public ImageHandler(JavaPlugin plugin) {
+        this.plugin = plugin;
         try {
             List<JImage> dependentImages = loadDependentImages();
             this.mosaicCreator = new MosaicCreator(dependentImages);
@@ -112,6 +115,7 @@ public class ImageHandler implements HttpHandler {
             String imageUrl = params.get("image_url");
             int x = Integer.parseInt(params.get("x"));
             int y = Integer.parseInt(params.get("y"));
+            int z = Integer.parseInt(params.get("z"));
 
             try {
                 URL url = new URL(imageUrl);
@@ -119,11 +123,11 @@ public class ImageHandler implements HttpHandler {
                 BufferedImage scaledImage = scaleImage(originalImage, maxHeight);
                 JImage hostImage = new JImage(scaledImage);
                 BufferedImage mosaic = mosaicCreator.createMosaic(hostImage);
-                generateMinecraftCommands(mosaic, x, y);
-                sendTextResponse(exchange, "Image processed and blocks set successfully.", 200);
+                generateMinecraftCommands(mosaic, x, y, z);
+                sendTextResponse(exchange, "Image processed and blocks set successfully for url " + imageUrl, 200);
             } catch (Exception e) {
                 e.printStackTrace(); // Proper error handling later
-                sendTextResponse(exchange, "Error processing image.", 503);
+                sendTextResponse(exchange, "Error processing image for url " + imageUrl, 503);
             }
         } else {
             sendTextResponse(exchange, "Method Not Allowed", 405);
@@ -133,20 +137,36 @@ public class ImageHandler implements HttpHandler {
     private BufferedImage scaleImage(BufferedImage original, int maxHeight) {
         int originalHeight = original.getHeight();
         int originalWidth = original.getWidth();
-        if (originalHeight <= maxHeight) {
-            return original; // No scaling
+
+        double aspectRatio = (double) originalWidth / originalHeight;
+        int maxProportionalWidth = (int) (maxHeight * aspectRatio);
+
+        int newHeight = Math.min(originalHeight, maxHeight);
+        int newWidth = Math.min(originalWidth, maxProportionalWidth);
+
+        if (originalWidth < newWidth) {
+            newWidth = originalWidth;
         }
-        int newHeight = maxHeight;
-        int newWidth = (int) ((double) originalWidth / originalHeight * newHeight);
-        BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = resizedImage.createGraphics();
+
+        if (originalHeight < newHeight) {
+            newHeight = originalHeight;
+        }
+
+        BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = scaledImage.createGraphics();
+
         g.drawImage(original, 0, 0, newWidth, newHeight, null);
         g.dispose();
-        return resizedImage;
+
+        return scaledImage;
     }
 
-    private void generateMinecraftCommands(BufferedImage image, int startX, int startY) {
-        int baseZ = 90;
+
+    private void generateMinecraftCommands(BufferedImage image, int startX, int startY, int startZ) {
+        if (startY < 96) {
+            startY = 96;
+        }
+
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 int pixel = image.getRGB(x, y);
@@ -156,7 +176,10 @@ public class ImageHandler implements HttpHandler {
                         (pixel) & 0xff,       // Blue
                         (pixel >> 24) & 0xff  // Alpha
                 });
-                setBlock(startX + x, startY + y, baseZ + y, bestMatch);
+
+                int adjustedY = startY + (image.getHeight() - 1 - y);
+
+                setBlock(startX + x, adjustedY, startZ, bestMatch);
             }
         }
     }
@@ -164,12 +187,19 @@ public class ImageHandler implements HttpHandler {
 
     private void setBlock(int x, int y, int z, JImage block) {
         Material material = materialMapper.getMaterialFromImageName(block.getFileName());
-        String command = String.format("/setblock %d %d %d %s", x, y, z, material.name());
-        executeMinecraftCommand(command);
+        if (material != Material.AIR) {
+            String blockId = material.getKey().getKey();
+            String command = String.format("setblock %d %d %d %s", x, y, z, blockId);
+            executeMinecraftCommand(command);
+        } else {
+            Bukkit.getLogger().warning("Invalid material for filename: " + block.getFileName());
+        }
     }
 
     private void executeMinecraftCommand(String command) {
-        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+        });
     }
 
     private void sendTextResponse(HttpExchange exchange, String responseText, int statusCode) throws IOException {
