@@ -3,7 +3,7 @@
 
 A Minecraft plugin that receives POST requests to generate pixel art. 
 
-To use, run the plugin on a server (currently version 1.20.4) and send a POST request to the server with the following JSON body:
+To use, run the plugin on a Spigot server (currently version 1.20.4) and send a POST request to the server with the following JSON body:
 
 ```json
 {
