@@ -1,5 +1,5 @@
 # MCArtGen
-## Version 1.0.3
+## Version 1.0.3.1
 
 A Minecraft plugin that receives POST requests to generate pixel art. 
 
