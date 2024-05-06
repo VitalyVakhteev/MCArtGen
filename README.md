@@ -1,9 +1,9 @@
 # MCArtGen
-## Version 1.0.3.1
+## Version 1.0.3.2
 
 A Minecraft plugin that receives POST requests to generate pixel art. 
 
-To use, run the plugin on a Spigot server (currently version 1.20.4) and send a POST request to the server with the following JSON body:
+To use, run the plugin on a Spigot server (currently version 1.20.6) and send a POST request to the :8001/upload path of the server with the following JSON body:
 
 ```json
 {
@@ -13,6 +13,8 @@ To use, run the plugin on a Spigot server (currently version 1.20.4) and send a 
   "z": "0",
 }
 ```
+
+For example, if hosted locally, you can send it to http://localhost:8001/upload.
 
 In return, you will get a structure resembling the image at the coordinates you provided.
 
