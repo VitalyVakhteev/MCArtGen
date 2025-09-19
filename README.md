@@ -1,4 +1,6 @@
 # MCArtGen
+<img width="847" height="471" alt="image" src="https://github.com/user-attachments/assets/fdd42f27-9310-490c-a40e-5fbadf9131a5" />
+
 ## Version 1.0.3.2
 
 A Minecraft plugin that receives POST requests to generate pixel art. 
